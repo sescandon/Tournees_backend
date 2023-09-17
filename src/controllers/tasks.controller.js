@@ -1,7 +1,9 @@
 import Task from "../models/task.model.js";
 
 export const getTasks = async (req, res) => {
-  const tasks = await Task.find();
+  const tasks = await Task.find({
+    user: req.user.id
+  });
   res.json(tasks);
 };
 export const createTask = async (req, res) => {
@@ -9,7 +11,8 @@ export const createTask = async (req, res) => {
   const newTask = new Task({
     title,
     description,
-    date
+    date,
+    user: req.user.id
   });
   const savedTask = await newTask.save();
   res.json(savedTask);
