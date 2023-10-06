@@ -1,104 +1,44 @@
-import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { createAccessToken } from "../libs/jwt.js";
 import jwt from "jsonwebtoken";
 import { TOKEN_SECRET } from "../config.js";
+import pool from "../db.js";
 
-export const register = async (req, res) => {
-  const { email, password, username } = req.body;
+export const Register = async (req, res) => {
+  const { email, password, username, nationality } = req.body;
 
   try {
-    const userFound = await User.findOne({ email });
-    if (userFound) return res.status(400).json(["Email already in use"]);
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      username,
+    // Check if email already exists in the database
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
+    ]);
+
+    if (result.rows.length > 0) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Insert user into database
+    const newUser = {
+      email: email,
       password: hashedPassword,
-    });
+      username: username,
+      nationality: nationality,
+    };
 
-    const userSaved = await newUser.save();
+    await pool.query("INSERT INTO users SET?", newUser);
 
-    const token = await createAccessToken({ id: userSaved._id });
-
-    res.cookie("token", token);
-
-    res.json({
-      id: userSaved._id,
-      username: userSaved.username,
-      email: userSaved.email,
-      createdAt: userSaved.createdAt,
-      updatedAt: userSaved.updatedAt,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const userFound = await User.findOne({ email });
-
-    if (!userFound) return res.status(400).json({ message: "User not found" });
-
-    const isCorrect = await bcrypt.compare(password, userFound.password);
-
-    if (!isCorrect)
-      return res.status(400).json({ message: "Incorrect password" });
-
-    const token = await createAccessToken({ id: userFound._id });
+    const token = await createAccessToken({ email: email });
 
     res.cookie("token", token);
 
-    res.json({
-      id: userFound._id,
-      username: userFound.username,
-      email: userFound.email,
-      createdAt: userFound.createdAt,
-      updatedAt: userFound.updatedAt,
-    });
+    res.status(200).json({ message: "User created successfully" });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
   }
-};
-
-export const logout = (req, res) => {
-  res.cookie("token", "", { expires: new Date(0) });
-  return res.sendStatus(200);
-};
-
-export const profile = async (req, res) => {
-  const userFound = await User.findById(req.user.id);
-
-  if (!userFound) return res.status(400).json({ message: "User not found" });
-
-  res.json({
-    id: userFound._id,
-    username: userFound.username,
-    email: userFound.email,
-    createdAt: userFound.createdAt,
-    updatedAt: userFound.updatedAt,
-  });
-};
-
-export const verifyToken = async (req, res) => {
-  const { token } = req.cookies;
-
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
-
-  jwt.verify(token, TOKEN_SECRET, async (err, user) => {
-    if (err) return res.status(401).json({ message: "Unauthorized" });
-
-    const userFound = await User.findById(user.id);
-    if (!userFound) return res.status(401).json({ message: "Unauthorized" });
-
-    return res.json({
-      id: userFound._id,
-      username: userFound.username,
-      email: userFound.email
-    })
-  });
 };

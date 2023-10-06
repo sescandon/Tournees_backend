@@ -6,7 +6,7 @@ export const registerSchema = z.object({
   }),
   email: z
     .string({
-      required_error: "Email is equired",
+      required_error: "Email is required",
     })
     .email({
       message: "Invalid email",
@@ -17,6 +17,19 @@ export const registerSchema = z.object({
     })
     .min(6, {
       message: "Password must be at least 6 characters",
+    })
+    .max(15, {
+      message: "Password must be less than 15 characters",
+    }),
+  nationality: z
+    .string({
+      required_error: "Nationality is required",
+    })
+    .min(6, {
+      message: "Nationality must be at least 6 characters",
+    })
+    .max(15, {
+      message: "Nationality must be less than 15 characters",
     }),
 });
 

@@ -8,11 +8,13 @@ export const authRequired = (req, res, next) => {
     return res.status(401).json({ message: "No token, authorization denied" });
   }
 
-  jwt.verify(token, TOKEN_SECRET, (err,user) => {
-    if(err){return res.status(401).json({ message: "Invalid token" });}
+  jwt.verify(token, TOKEN_SECRET, (err, user) => {
+    if (err) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
 
-    req.user = user
-  })
+    req.user = user;
+  });
 
   next();
 };

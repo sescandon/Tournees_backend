@@ -1,10 +1,13 @@
-import mongoose from "mongoose";
+import { createPool } from 'mysql2';
 
-export const connectDB = async () => {
-    try {
-        await mongoose.connect("mongodb://0.0.0.0/logincrud")
-        console.log(">>> Database connected")
-    } catch (error) {
-        console.log(error)
-    }
-}
+// create the connection pool
+const pool = createPool({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    port: 3306,
+    database: 'crud'
+});
+
+// export the pool
+export default pool;
