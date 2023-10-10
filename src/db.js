@@ -6,7 +6,7 @@ const pool = createPool({
     user: 'root',
     password: '',
     port: 3306,
-    database: 'crud'
+    database: 'gaming_management'
 });
 
 // export the pool

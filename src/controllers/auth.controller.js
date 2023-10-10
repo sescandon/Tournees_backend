@@ -9,11 +9,9 @@ export const Register = async (req, res) => {
 
   try {
     // Check if email already exists in the database
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
-
-    if (result.rows.length > 0) {
+    const result = await pool.promise().query(`SELECT * FROM users WHERE email = '${email}'`);
+    
+    if (typeof result !== "undefined") {
       return res.status(400).json({ message: "Email already exists" });
     }
 
@@ -29,7 +27,7 @@ export const Register = async (req, res) => {
       nationality: nationality,
     };
 
-    await pool.query("INSERT INTO users SET?", newUser);
+    await pool.promise().query("INSERT INTO users SET?", newUser);
 
     const token = await createAccessToken({ email: email });
 
